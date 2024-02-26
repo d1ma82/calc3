@@ -9,9 +9,6 @@ namespace executor {
     class Exe {
 
         std::stack<size_t> run_st;
-    
-    public:
-        void push(size_t start) { run_st.push(start); }
 
         template<typename R, typename F, typename S> void dbl(
                 char op,
@@ -76,6 +73,9 @@ namespace executor {
             error: throw std::runtime_error("Unknown operands");
         }
 
+    public:
+        void push(size_t start) { run_st.push(start); }
+        
         template<char op> void do_op ( size_t count ) {
 
             auto itb = std::next(mem::arena.cbegin(), run_st.top());

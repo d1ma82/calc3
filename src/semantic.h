@@ -39,16 +39,7 @@ namespace analize {
        
         std::vector<command_t> command_vec;
         std::stack<command_t> command_stack;
-        int current_pr=0, old_pr=0;
-
-    public:
-        Semantic(): executor::Exe() {}
-
-        template <typename T, symtab::RTTI type> void scalar(T value) {
-
-            mem::arena.emplace_back(token::Scalar<T>(value), type);
-            command_vec.emplace_back(mem::arena.size()-1, 0, [this] (size_t v) { executor::Exe::push(v); });
-        }
+        int current_pr=0, old_pr=0; 
 
         void push (char value) {
 
@@ -59,7 +50,7 @@ namespace analize {
                 case '/': { command_stack.emplace( 2, priority('/'), [this] (size_t v) { executor::Exe::do_op<'/'>(v); } );break; }
                 case 'u': { command_stack.emplace( 1, priority('u'), [this] (size_t v) { executor::Exe::do_op<'u'>(v); } );break; }
             }
-        } 
+        }         
 
         void old_lower() {
 
@@ -68,6 +59,15 @@ namespace analize {
                 command_vec.push_back(command_stack.top());
                 command_stack.pop();
             }
+        }            
+
+    public:
+        Semantic(): executor::Exe() {}
+
+        template <typename T, symtab::RTTI type> void scalar(T value) {
+
+            mem::arena.emplace_back(token::Scalar<T>(value), type);
+            command_vec.emplace_back(mem::arena.size()-1, 0, [this] (size_t v) { executor::Exe::push(v); });
         }    
 
         void terminal (char value) {
