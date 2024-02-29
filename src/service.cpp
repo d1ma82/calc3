@@ -62,8 +62,8 @@ namespace analize {
             
             if (kind==SPECIAL) { 
 
-                buff+=ch; co_yield kind; kind=INPUT, old=SPECIAL; 
-                buff.clear(); if (ch!='!') continue; 
+                buff+=ch; co_yield kind; kind=INPUT, old=SPECIAL; buff.clear(); 
+                if (ch!='!') continue; 
             }
 
             co_yield END;
@@ -72,7 +72,7 @@ namespace analize {
 
     stm::resumable State_INPUT (stm::state_machine<State, Kind>& stm) {
 
-        do { } while (!co_await stm.awaiter(transition));    
+        while (!co_await stm.awaiter(transition));    
     }
 
     stm::resumable State_SCALAR (stm::state_machine<State, Kind>& stm) {

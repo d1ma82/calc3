@@ -55,29 +55,27 @@ namespace stm {
         std::coroutine_handle<> await_suspend(std::coroutine_handle<>) noexcept {
         
             stm_.gen_next();
-            auto sym = stm_.gen_val();
+            auto sym = stm_.gen_current();
             auto newstate = F::operator()(sym);
             return stm_[newstate];
         }
 
-        bool await_resume() noexcept { return (stm_.gen_val() == Kind::END); }
+        bool await_resume() noexcept { return (stm_.gen_current() == Kind::END); }
     };
 
-    template<typename State, typename Sym> class state_machine {
+    template<typename State, typename Kind> class state_machine {
 
-        State current_;
         std::unordered_map<State, std::coroutine_handle<>> routines_;
-        generator<Sym> gen_;
+        generator<Kind> gen_;
 
     public:
-        state_machine (generator<Sym> && g): gen_{ std::move(g) } {}
+        state_machine (generator<Kind> && g): gen_{ std::move(g) } {}
 
-        void run (State first) { current_=first; routines_[current_].resume(); }
+        void run (State first) { routines_[first].resume(); }
         template<typename F> void add_state (State x, F func) { routines_[x]=func(*this).handle(); }
         std::coroutine_handle<> operator [] (State s) { return routines_[s]; }
-        State current() const { return current_; }
-        template <typename F> auto awaiter (F transition) { return stm_awaiter<F, Sym, decltype(*this)>(transition, *this); }
-        Sym gen_val() const { return gen_.current(); }
+        template <typename F> auto awaiter (F transition) { return stm_awaiter<F, Kind, decltype(*this)>(transition, *this); }
+        Kind gen_current() const { return gen_.current(); }
         void gen_next() { gen_.next(); }
     };
 }
