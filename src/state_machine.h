@@ -49,18 +49,18 @@ namespace stm {
 
     template <typename F, typename Kind, typename SM> struct stm_awaiter : private F {
   
-        SM &stm_;
-        stm_awaiter(F f, SM &stm) : F{f}, stm_{stm} {}
+        SM &sm;
+        stm_awaiter(F f, SM &sm) : F{f}, sm{sm} {}
         constexpr bool await_ready() const noexcept { return false; }
         std::coroutine_handle<> await_suspend(std::coroutine_handle<>) noexcept {
         
-            stm_.gen_next();
-            auto sym = stm_.gen_current();
-            auto newstate = F::operator()(sym);
-            return stm_[newstate];
+            sm.gen_next();
+            auto kind = sm.gen_current();
+            auto newstate = F::operator()(kind);
+            return sm[newstate];
         }
 
-        bool await_resume() noexcept { return (stm_.gen_current() == Kind::END); }
+        bool await_resume() noexcept { return (sm.gen_current() == Kind::END); }
     };
 
     template<typename State, typename Kind> class state_machine {
