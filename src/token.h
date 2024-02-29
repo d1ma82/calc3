@@ -6,7 +6,7 @@
 #include "log.h"
 
 namespace symtab {
-    enum RTTI {UNDEF, SCALAR_INT, SCALAR_FLOAT};
+    enum RTTI {UNDEF, TERM, SCALAR_INT, SCALAR_FLOAT};
 
     class object_t final {
         

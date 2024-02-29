@@ -4,9 +4,8 @@ project(calc)
 
 file(GLOB SRC 
 "./src/main.cpp"
-"./src/lexer.cpp"
+"./src/service.cpp"
 "./src/syntax.cpp"
-#"./src/exec.cpp"
 )
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -S -g")
 

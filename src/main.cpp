@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include "lexer.h"
+#include "service.h"
 
 static bool yes() {
 
@@ -17,14 +17,9 @@ int main () {
     try {
         
         do { 
-            analize::Lexic lex;
+            analize::Service srv(std::cin);
             std::cout<<'>';
-            for (char ch; std::cin>>ch;) {
-
-                lex<<ch;
-                if (ch=='!') break;
-            }
-            
+            srv.run();            
             std::cout<<">Continue? y/n ";
         } while (yes());
 
