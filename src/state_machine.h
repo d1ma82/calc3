@@ -65,17 +65,17 @@ namespace stm {
 
     template<typename State, typename Kind> class state_machine {
 
-        std::unordered_map<State, std::coroutine_handle<>> routines_;
-        generator<Kind> gen_;
+        std::unordered_map<State, std::coroutine_handle<>> routines;
+        generator<Kind> gen;
 
     public:
-        state_machine (generator<Kind> && g): gen_{ std::move(g) } {}
+        state_machine (generator<Kind> && g): gen{ std::move(g) } {}
 
-        void run (State first) { routines_[first].resume(); }
-        template<typename F> void add_state (State x, F func) { routines_[x]=func(*this).handle(); }
-        std::coroutine_handle<> operator [] (State s) { return routines_[s]; }
+        void run (State first) { routines[first].resume(); }
+        template<typename F> void add_state (State x, F func) { routines[x]=func(*this).handle(); }
+        std::coroutine_handle<> operator [] (State s) { return routines[s]; }
         template <typename F> auto awaiter (F transition) { return stm_awaiter<F, Kind, decltype(*this)>(transition, *this); }
-        Kind gen_current() const { return gen_.current(); }
-        void gen_next() { gen_.next(); }
+        Kind gen_current() const { return gen.current(); }
+        void gen_next() { gen.next(); }
     };
 }
