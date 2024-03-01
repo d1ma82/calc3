@@ -6,12 +6,6 @@
 
 namespace analize {
     
-    bool is_float;
-    bool synt_ok;
-    std::string buff;  
-    Syntax syntax;
-    Semantic semantic;
-
     const std::set<char> operators {'+', '-', '*', '/'};
     const std::set<char> digits {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.'};
     const std::set<char> special {';', '!', '(', ')'};
@@ -27,7 +21,7 @@ namespace analize {
         }
     };      
 
-    stm::generator<Kind> input(std::istream& istr) {
+    stm::generator<Kind> Service::input(std::istream& istr) {
 
         Kind kind=INPUT, old=UNDEF;
 
@@ -70,58 +64,55 @@ namespace analize {
         } 
     }
 
-    stm::resumable State_INPUT (stm::state_machine<State, Kind>& stm) {
+    stm::resumable State_INPUT (stm::state_machine<Service, State, Kind>& stm) {
 
-        while (!co_await stm.awaiter(transition));    
+        while (co_await stm.awaiter(transition));    
     }
 
-    stm::resumable State_SCALAR (stm::state_machine<State, Kind>& stm) {
+    stm::resumable State_SCALAR (stm::state_machine<Service, State, Kind>& stm) {
 
         do {
-            bool ret = syntax.non_terminal(W_SCALAR);
-            if (!ret) synt_ok=false;
+            bool ret = stm->Syntax::non_terminal(W_SCALAR);
+            if (!ret) stm->synt_ok=false;
        
-            if (is_float) { semantic.scalar<double, symtab::SCALAR_FLOAT> (std::stod(buff)); is_float=false; }
-            else semantic.scalar<int, symtab::SCALAR_INT>(std::stoi(buff));
+            if (stm->is_float) { stm->Semantic::scalar<double, symtab::SCALAR_FLOAT> (std::stod(stm->buff)); stm->is_float=false; }
+            else stm->Semantic::scalar<int, symtab::SCALAR_INT>(std::stoi(stm->buff));
     
-        } while (!co_await stm.awaiter(transition));
+        } while (co_await stm.awaiter(transition));
     }
 
-    stm::resumable State_OPERATOR (stm::state_machine<State, Kind>& stm) {
+    stm::resumable State_OPERATOR (stm::state_machine<Service, State, Kind>& stm) {
 
         do {
-            bool ret = syntax.terminal(char_to_word(buff[0]));
-            if (!ret) synt_ok=false;
+            bool ret = stm->Syntax::terminal(char_to_word(stm->buff[0]));
+            if (!ret) stm->synt_ok=false;
             
-            semantic.terminal(buff[0]);
+            stm->Semantic::terminal(stm->buff[0]);
         
-        } while (!co_await stm.awaiter(transition));
+        } while (co_await stm.awaiter(transition));
     }
 
-    stm::resumable State_SPECIAL (stm::state_machine<State, Kind>& stm) {
+    stm::resumable State_SPECIAL (stm::state_machine<Service, State, Kind>& stm) {
 
         do {
             bool ret=true;
 
-            switch (buff[0]){
-                case '!': semantic.run(synt_ok); break;
-                case ';': { ret = syntax.terminal(char_to_word(buff[0])); semantic.end_equation(); break; }
-                case '(': { ret = syntax.terminal(char_to_word(buff[0])); semantic.open_bracket(); break; }
-                case ')': { ret = syntax.terminal(char_to_word(buff[0])); semantic.close_bracket(); break;}
+            switch (stm->buff[0]){
+                case '!': stm->Semantic::run(stm->synt_ok); break;
+                case ';': { ret = stm->Syntax::terminal(char_to_word(stm->buff[0])); stm->Semantic::end_equation(); break; }
+                case '(': { ret = stm->Syntax::terminal(char_to_word(stm->buff[0])); stm->Semantic::open_bracket(); break; }
+                case ')': { ret = stm->Syntax::terminal(char_to_word(stm->buff[0])); stm->Semantic::close_bracket(); break;}
             }
-            if (!ret) synt_ok=ret;
+            if (!ret) stm->synt_ok=ret;
         
-        } while (!co_await stm.awaiter(transition));    
+        } while (co_await stm.awaiter(transition));    
     }        
 
-    Service::Service(std::istream& istr): sm{input(istr)} {
+    Service::Service(std::istream& istr): sm{*this, input(istr)} {
 
         buff     = "";
         synt_ok  = true;
         is_float = false;
-
-        syntax = Syntax();
-        semantic = Semantic();
 
         sm.add_state(S_INPUT, State_INPUT);
         sm.add_state(S_SCALAR, State_SCALAR);

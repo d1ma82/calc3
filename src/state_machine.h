@@ -17,14 +17,14 @@ namespace stm {
             auto yield_value(T value) { current_value = value; return std::suspend_always(); }
         };
 
-        bool next() { return handle_? (handle_.resume(), !handle_.done()): false; }
-        T current() const { return handle_.promise().current_value; }
+        bool next() { return handle? (handle.resume(), !handle.done()): false; }
+        T current() const { return handle.promise().current_value; }
 
-        generator (std::coroutine_handle<promise_type> h): handle_{h} {}
+        generator (std::coroutine_handle<promise_type> h): handle{h} {}
         generator (generator const&)=delete;
-        generator (generator && rhs): handle_{ std::exchange(rhs.handle_, nullptr) } {}
-        ~generator() { if (handle_) handle_.destroy(); }
-        private: std::coroutine_handle<promise_type> handle_;
+        generator (generator && rhs): handle{ std::exchange(rhs.handle, nullptr) } {}
+        ~generator() { if (handle) handle.destroy(); }
+        private: std::coroutine_handle<promise_type> handle;
     };
 
     struct resumable {
@@ -37,14 +37,13 @@ namespace stm {
             void unhandled_exception() { std::rethrow_exception(std::current_exception()); }
         };
 
-        resumable (std::coroutine_handle<promise_type> h): handle_{h} {}
+        resumable (std::coroutine_handle<promise_type> h): handle{h} {}
         resumable (resumable const&)=delete;
-        resumable (resumable && rhs): handle_{ std::exchange(rhs.handle_, nullptr) } {}
-        ~resumable() { if (handle_) handle_.destroy(); }
+        resumable (resumable && rhs): handle{ std::exchange(rhs.handle, nullptr) } {}
+        ~resumable() { if (handle) handle.destroy(); }
 
-        bool resume() { if (!handle_.done()) handle_.resume(); return !handle_.done(); }
-        auto handle() { return std::exchange(handle_, nullptr); }
-        private: std::coroutine_handle<promise_type> handle_;
+        auto get_handle() { return std::exchange(handle, nullptr); }
+        private: std::coroutine_handle<promise_type> handle;
     };        
 
     template <typename F, typename Kind, typename SM> struct stm_awaiter : private F {
@@ -60,19 +59,20 @@ namespace stm {
             return sm[newstate];
         }
 
-        bool await_resume() noexcept { return (sm.gen_current() == Kind::END); }
+        bool await_resume() noexcept { return (sm.gen_current() != Kind::END); }
     };
 
-    template<typename State, typename Kind> class state_machine {
-
+    template<typename Context, typename State, typename Kind> class state_machine {
+        Context& ctx;
         std::unordered_map<State, std::coroutine_handle<>> routines;
         generator<Kind> gen;
 
     public:
-        state_machine (generator<Kind> && g): gen{ std::move(g) } {}
+        state_machine (Context& ctx, generator<Kind> && g): ctx{ctx}, gen{ std::move(g) } {}
 
+        Context* operator -> () const { return std::addressof(ctx); }
         void run (State first) { routines[first].resume(); }
-        template<typename F> void add_state (State x, F func) { routines[x]=func(*this).handle(); }
+        template<typename F> void add_state (State x, F func) { routines[x]=func(*this).get_handle(); }
         std::coroutine_handle<> operator [] (State s) { return routines[s]; }
         template <typename F> auto awaiter (F transition) { return stm_awaiter<F, Kind, decltype(*this)>(transition, *this); }
         Kind gen_current() const { return gen.current(); }
