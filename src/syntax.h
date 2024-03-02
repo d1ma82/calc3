@@ -7,7 +7,7 @@
 
 namespace analize {
     
-    enum Word { W_UNDEF, W_SCALAR, W_PLUS, W_MINUS, W_MULT, W_DIV, W_OPEN_BRACKET, W_CLOSE_BRACKET, W_END_EQUATION, W_E, W_P, W_K, COUNT };
+    enum Word { W_UNDEF, W_SCALAR, W_VARIABLE, W_PLUS, W_MINUS, W_MULT, W_DIV, W_ASSIGN, W_OPEN_BRACKET, W_CLOSE_BRACKET, W_END_EQUATION, W_E, W_P, W_K, COUNT };
     typedef  std::queue<Word> Rule;
 
     Word char_to_word(char ch);

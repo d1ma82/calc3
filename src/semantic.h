@@ -49,6 +49,7 @@ namespace analize {
                 case '*': { command_stack.emplace( 2, priority('*'), [this] (size_t v) { executor::Exe::do_op<'*'>(v); } );break; }
                 case '/': { command_stack.emplace( 2, priority('/'), [this] (size_t v) { executor::Exe::do_op<'/'>(v); } );break; }
                 case 'u': { command_stack.emplace( 1, priority('u'), [this] (size_t v) { executor::Exe::do_op<'u'>(v); } );break; }
+                case '=': { command_stack.emplace( 2, priority('='), [this] (size_t)   { executor::Exe::assign(); } );break; }
             }
         }         
 
@@ -66,9 +67,21 @@ namespace analize {
 
         template <typename T, symtab::RTTI type> void scalar(T value) {
 
-            mem::arena.emplace_back(token::Scalar<T>(value), type);
-            command_vec.emplace_back(mem::arena.size()-1, 0, [this] (size_t v) { executor::Exe::push(v); });
+            mem::arena.emplace_back (token::Scalar<T>(value), type);
+            command_vec.emplace_back (mem::arena.size()-1, 0, [this] (size_t v) { executor::Exe::push(v); });
         }    
+
+        void variable (std::string const& name) {
+
+            if (mem::var_map.contains (name)) {
+
+                command_vec.emplace_back (std::string::npos, 0, [this, name] (size_t) { executor::Exe::push_var_value(name); });
+            
+            } else {
+                mem::var_map[name]=std::string::npos;
+                command_vec.emplace_back (0, 0, [this, name] (size_t) { executor::Exe::push_var(name); });
+            }
+        }
 
         void terminal (char value) {
 

@@ -72,7 +72,7 @@ namespace stm {
 
         Context* operator -> () const { return std::addressof(ctx); }
         void run (State first) { routines[first].resume(); }
-        template<typename F> void add_state (State x, F func) { routines[x]=func(*this).get_handle(); }
+        template<typename F> void add_state (State x, F func) { routines[x]=func(ctx, *this).get_handle(); }
         std::coroutine_handle<> operator [] (State s) { return routines[s]; }
         template <typename F> auto awaiter (F transition) { return stm_awaiter<F, Kind, decltype(*this)>(transition, *this); }
         Kind gen_current() const { return gen.current(); }

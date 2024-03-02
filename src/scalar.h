@@ -8,8 +8,8 @@ namespace token {
         T s {};
         Scalar() {}
         explicit Scalar (T const& v): s{v} {}
-        T const& operator [] (size_t) const { return s; }
-        T& operator [] (size_t) { return s; }      
+        //T const& operator [] (size_t) const { return s; }
+        //T& operator [] (size_t) { return s; }      
         
         template<typename Ret> Scalar<Ret> neg () { return Scalar<Ret>(-s); }
         template<typename Ret, typename S> Scalar<Ret> add  (S b) { return Scalar<Ret>(s + b.s); }
@@ -20,7 +20,7 @@ namespace token {
 
     template<typename T> std::ostream& operator << (std::ostream& out, Scalar<T> const& sc) {
 
-        out<<sc[0];
+        out<<sc.s;
         return out;
     }
 }
