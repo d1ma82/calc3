@@ -146,6 +146,9 @@ namespace analize {
             }
         }
 
+        mem::arena.clear();
+        mem::var_map.clear();
+
         sm.add_state(S_INPUT, State_INPUT);
         sm.add_state(S_SCALAR, State_SCALAR);
         sm.add_state(S_VARIABLE, State_VARIABLE);

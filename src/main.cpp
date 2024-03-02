@@ -16,7 +16,7 @@ int main () {
 
     try {
         
-        do { 
+        do {
             analize::Service srv(std::cin);
             std::cout<<'>';
             srv.run();            

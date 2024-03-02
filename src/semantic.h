@@ -4,6 +4,7 @@
 #include <stack>
 #include <limits>
 #include <algorithm>
+#include <sstream>
 #include <functional>
 #include "arena.h"
 #include "scalar.h"
@@ -39,6 +40,8 @@ namespace analize {
        
         std::vector<command_t> command_vec;
         std::stack<command_t> command_stack;
+        std::stack<std::string> vars;
+
         int current_pr=0, old_pr=0; 
 
         void push (char value) {
@@ -78,6 +81,7 @@ namespace analize {
                 command_vec.emplace_back (std::string::npos, 0, [this, name] (size_t) { executor::Exe::push_var_value(name); });
             
             } else {
+                vars.push(name);
                 mem::var_map[name]=std::string::npos;
                 command_vec.emplace_back (0, 0, [this, name] (size_t) { executor::Exe::push_var(name); });
             }
@@ -85,6 +89,8 @@ namespace analize {
 
         void terminal (char value) {
 
+            if (value=='=') vars.pop();
+            
             current_pr = priority(value);
             old_pr     = command_stack.empty()? 0: command_stack.top().priority;
 
@@ -118,12 +124,29 @@ namespace analize {
         }        
         
         void run(bool syntax) {
-            if (syntax) {
-                std::for_each(command_vec.begin(), command_vec.end(), [] (command_t com) {com();});
-                executor::Exe::print();
-            } else {
-                 std::cout<<"syntax " << (syntax? "true\n":"false\n");
+
+            if (!vars.empty()) {
+               
+                std::stringstream str;
+                str<<"Undefined variables ";
+
+                while (!vars.empty()) {
+
+                    str<<vars.top()<<',';
+                    vars.pop(); 
+                }
+               
+                std::cout<<str.str()<<'\n';
+                return;
             }
+
+            if (!syntax) {
+                std::cout<<"syntax " << (syntax? "true\n":"false\n");
+                return;
+            } 
+
+            std::for_each(command_vec.begin(), command_vec.end(), [] (command_t com) {com();});
+            executor::Exe::print();            
         }        
     };
 }

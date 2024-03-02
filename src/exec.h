@@ -81,10 +81,7 @@ namespace executor {
     public:
         void push(size_t start) { run_st.push(start); }
         void push_var(std::string const& name) { var_st.push(name); }
-        void push_var_value(std::string const& name) { 
-        
-            run_st.push(mem::var_map[name]); 
-        }
+        void push_var_value(std::string const& name) { run_st.push(mem::var_map[name]); }
 
         template<char op> void do_op ( size_t count ) {
 
@@ -92,7 +89,6 @@ namespace executor {
             run_st.pop();
             if (count==1) { single (op, itb); return; }
 
-            if (run_st.empty()) {throw std::runtime_error("Undefined second argument or variable not found");}
             auto ita = std::next(mem::arena.cbegin(), run_st.top());
             run_st.pop(); 
             double_(op, ita, itb);        
